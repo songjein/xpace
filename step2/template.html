@@ -34,12 +34,12 @@
 	</style>
 
 	<div class="container">
-		<h1>타겟 : <b id="subject"></b></h1>
-		<h2>주제어{hasA, PartOf, ...)</h2>
+		<h1>Target: <b id="subject"></b></h1>
+		<h2>Topics{hasA, PartOf, ...)</h2>
 		<div id="topics">
 		</div>
 		<div id="comatrix-graph-container">
-			<h2>관계분석 결과</h2>
+			<h2>Semantic Graph</h2>
 			<div id="comatrix-graph">
 			</div>
 			<div style="height: 20px"></div>
@@ -55,10 +55,11 @@
 
 	<script>
 		$(function(){		
+			////////////////////////////////////////////////////////////////////////////////////////////
+			// set examples 
+			////////////////////////////////////////////////////////////////////////////////////////////
 			var examples = {{ examples }};
-			console.log(examples);
 			function setExamples(topic){
-				console.log("selected", examples[topic]);	
 				$('#examples').html("");
 				for (i = 0 ; i < examples[topic].length; i++){
 					$('#examples').append("<div>" + examples[topic][i] + "</div>");
@@ -70,34 +71,36 @@
 			var w = 1000;
 			var h = 400;
 			var linkDistance=130;
-			var colors = d3.scale.category10();
+			var colors = d3.scale.category20();
+
 			var subject = "{{subject}}";
 			$("#subject").text(subject);
+			
 			var topics = "{{ topics }}";
 			topics = topics.split(",")
-			var dataset;
 			for (var i = 0 ; i < topics.length; i++){
 				$("#topics").append("<span class='topic-item' data-id='" + i + "'>" + topics[i] +"</span>");
 			}
 
+			var dataset;
+
 			$('.topic-item').click(function(){
-				idx = $(this).attr('data-id');
-				dataset = makeDataset([topics[idx]]);
-				drawGraph(dataset, topics[idx]);
-				setExamples(topics[idx]);
+				did = $(this).attr('data-id');
+				dataset = makeDataset([topics[did]]);
+				drawGraph(dataset, topics[did]);
+				setExamples(topics[did]);
 			})
 			
 			var original_graph = {{ graph }};
-			console.log(original_graph);
 
 			var comatrix = {{ viz_graph }};  
-			console.log(comatrix);
 
 			function makeDataset(topics){
+				comatrix_ = $.extend(true, {}, comatrix); // bug fix : comatrix 자체가 계속해서 변하는 문제
 				// 토픽의 인덱스 찾기
 				var topics_idx = []
 				for (i = 0 ; i < topics.length; i ++){
-					topic_idx = comatrix.nodes.findIndex(function(e){
+					topic_idx = comatrix_.nodes.findIndex(function(e){
 						return e.name == topics[i];	
 					});
 					topics_idx.push(topic_idx);
@@ -110,25 +113,24 @@
 				}
 				// 내가 원하는 것만 그리기 위해선 인덱스 재할당 필요
 				var nodes_idx = topics_idx.slice(); 
-				for (i = 0 ; i < comatrix.edges.length; i++){
+				for (i = 0 ; i < comatrix_.edges.length; i++){
 					//if (comatrix.edges[i].source == topic_idx){
-					if (topics_idx.indexOf(comatrix.edges[i].source) > -1){
+					if (topics_idx.indexOf(comatrix_.edges[i].source) > -1){
 						// 일단 edges를 tmp에 저장(뒤에서 인덱스 재할당)
-						tmp.edges.push(comatrix.edges[i]);
+						tmp.edges.push(comatrix_.edges[i]);
 						// 인덱스 재할당을 위해 nodes_idx에 원래 인덱스 저장
-						nodes_idx.push(comatrix.edges[i].target);
+						nodes_idx.push(comatrix_.edges[i].target);
 					} 
 				}
 				// nodes_idx가 정렬이 된다
 				nodes_idx = nodes_idx.sort(function(a,b){return a-b});
-				console.log("sorted nodes idx", nodes_idx);
+
 				// 순서대로 0,1,2,...을 매핑해야 한다
 				// 일단 이 순서대로 nodes를 채운다
 				for (i = 0; i < nodes_idx.length; i ++){
-					tmp.nodes.push({name: comatrix.nodes[nodes_idx[i]].name});
+					tmp.nodes.push({name: comatrix_.nodes[nodes_idx[i]].name});
 				}
 				// 이 노드들은 순서대로 0,1,2,... 의 인덱스를 새로 할당 받는다
-				console.log("nodes",tmp.nodes);
 				// tmp.edges에 저장해 뒀던 인덱스를 0,1,2,... 부터 새로 할당한다
 				for (i = 0 ; i < tmp.edges.length; i ++){
 					var os = tmp.edges[i].source	
@@ -140,13 +142,12 @@
 						return e == ot;	
 					});
 				}
-				console.log("nodes new edges", tmp.edges);
-				console.log(tmp);
-				return tmp;
+				return tmp
 			}
 
 			
 			function drawGraph(dataset, topic){
+				console.log("dataset", dataset);
 				$("svg").remove();
 				var svg = d3.select("#comatrix-graph").append("svg").attr({"width":w,"height":h});
 				var force = d3.layout.force()
@@ -172,7 +173,7 @@
 					.enter()
 					.append("circle")
 					.attr({"r": function(d,i){
-							console.log("@", d, i);
+							// 빈도수에 따라 1~30 값 배정
 							for (i = 0 ; i < original_graph[topic].length; i++){
 								va = original_graph[topic][i][0];
 								if (va == d["name"]){

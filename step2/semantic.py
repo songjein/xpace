@@ -62,7 +62,7 @@ f_p = open("%s_pos.txt" %(userInputSubject)) # pos tagged file
 f_n_p = open("%s_no_pos.txt" %(userInputSubject)) # no pos tagged file
 
 # 의미없는 오피니언들
-STOPWORD_VA= ["같/VA", "이렇/VA", "그렇/VA", "어떻/VA", "없/VA", "높/VA", "시/VA"]
+STOPWORD_VA= ["같/VA", "이렇/VA", "그렇/VA", "어떻/VA", "없/VA", "높/VA", "시/VA", "적/VA"]
 
 # 휴리스틱 메서드에서 최대 5칸만 스캔
 WINDOW_LIMIT = 5
