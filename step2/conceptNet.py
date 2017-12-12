@@ -29,25 +29,26 @@ def showList(l):
 # POS 태거의 성능 의존 --> 범퍼는 범 푸 어 로 해석되어서 필터링 아웃 됨
 # word2vec으로 확장할 때, 추가되길 기대할 수 밖에
 
-def preprocess():
+def preprocess(verbose=True):
+	print ("ConceptNet preprocessing...")
 	ret = {} 
 	for r in Relations:
 		tmp = []
 		terms = termsOf(r)
-		#print ("\n\nOriginal Terms of " + r)
-		#print (" ,".join(terms))
+		if verbose: print ("\n\nOriginal Terms of " + r)
+		if verbose: print (" ,".join(terms))
 		for t in terms: 
 			tagList = komoran.pos(t)
-			#print (" ".join(["%s/%s"%(tag[0],tag[1])for tag in tagList]))
+			if verbose: print (" ".join(["%s/%s"%(tag[0],tag[1])for tag in tagList]))
 			nouns_sl_list = [tag for tag in tagList if isNN_SL(tag[1])]
-			#print (t + " --> " + ", ".join(["%s/%s"%(item[0],item[1]) for item in nouns_sl_list]))
+			if verbose: print (t + " --> " + ", ".join(["%s/%s"%(item[0],item[1]) for item in nouns_sl_list]))
 			tmp += nouns_sl_list
-		#print ("\nPreprocessed result")
+		if verbose: print ("\nPreprocessed result")
 		noDup = list(set([i[0] for i in tmp]))
-		#print (" ".join(noDup))
+		if verbose: print (" ".join(noDup))
 		ret[r] = noDup
-	#print ("\n\nFinal result")
-	#print (ret)
+	if verbose: print ("\n\nFinal result")
+	if verbose: print (ret)
 	return ret
 
 
